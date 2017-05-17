@@ -11,7 +11,10 @@ from django.db import connection
 from django.http import HttpResponseBadRequest
 from django.shortcuts import render_to_response
 from django.utils import simplejson
-from django.utils.hashcompat import sha_constructor
+try:
+    from hashlib import sha1 as sha_constructor
+except ImportError:
+    from django.utils.hashcompat import sha_constructor
 try:
     from django.views.decorators.csrf import csrf_exempt
 except ImportError:
@@ -19,11 +22,14 @@ except ImportError:
 else:
     HAS_CSRF = True
 
+
 class InvalidSQLError(Exception):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
+
 
 def debug_media(request, path):
     root = getattr(settings, 'DEBUG_TOOLBAR_MEDIA_ROOT', None)
@@ -31,6 +37,7 @@ def debug_media(request, path):
         parent = os.path.abspath(os.path.dirname(__file__))
         root = os.path.join(parent, 'media', 'debug_toolbar')
     return django.views.static.serve(request, path, root)
+
 
 def sql_select(request):
     """
@@ -63,6 +70,7 @@ def sql_select(request):
         }
         return render_to_response('debug_toolbar/panels/sql_select.html', context)
     raise InvalidSQLError("Only 'select' queries are allowed.")
+
 
 def sql_explain(request):
     """
@@ -135,7 +143,8 @@ def sql_profile(request):
             cursor.execute(sql, params) # Execute SELECT
             cursor.execute("SET PROFILING=0") # Disable profiling
             # The Query ID should always be 1 here but I'll subselect to get the last one just in case...
-            cursor.execute("SELECT * FROM information_schema.profiling WHERE query_id=(SELECT query_id FROM information_schema.profiling ORDER BY query_id DESC LIMIT 1)")
+            cursor.execute("SELECT * FROM information_schema.profiling WHERE query_id="
+                           "(SELECT query_id FROM information_schema.profiling ORDER BY query_id DESC LIMIT 1)")
             headers = [d[0] for d in cursor.description]
             result = cursor.fetchall()
         except:

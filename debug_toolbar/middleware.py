@@ -7,12 +7,13 @@ from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.utils.encoding import smart_unicode
-from django.conf.urls.defaults import include, patterns
+from django.conf.urls import include, patterns
 
 import debug_toolbar.urls
 from debug_toolbar.toolbar.loader import DebugToolbar
 
 _HTML_TYPES = ('text/html', 'application/xhtml+xml')
+
 
 def replace_insensitive(string, target, replacement):
     """
@@ -23,23 +24,25 @@ def replace_insensitive(string, target, replacement):
     index = no_case.rfind(target.lower())
     if index >= 0:
         return string[:index] + replacement + string[index + len(target):]
-    else: # no results so return the original string
+    else:  # no results so return the original string
         return string
+
 
 class DebugToolbarMiddleware(object):
     """
     Middleware to set up Debug Toolbar on incoming request and render toolbar
     on outgoing response.
     """
+
     def __init__(self):
         self.debug_toolbars = {}
         self.override_url = True
 
         # Set method to use to decide to show toolbar
-        self.show_toolbar = self._show_toolbar # default
+        self.show_toolbar = self._show_toolbar  # default
 
         # The tag to attach the toolbar to
-        self.tag= u'</body>'
+        self.tag = u'</body>'
 
         if hasattr(settings, 'DEBUG_TOOLBAR_CONFIG'):
             show_toolbar_callback = settings.DEBUG_TOOLBAR_CONFIG.get(
@@ -57,10 +60,8 @@ class DebugToolbarMiddleware(object):
             remote_addr = x_forwarded_for.split(',')[0].strip()
         else:
             remote_addr = request.META.get('REMOTE_ADDR', None)
-        if not remote_addr in settings.INTERNAL_IPS \
-            or (request.is_ajax() and \
-                not debug_toolbar.urls._PREFIX in request.path) \
-                    or not settings.DEBUG:
+        if remote_addr not in settings.INTERNAL_IPS or (
+                    request.is_ajax() and debug_toolbar.urls._PREFIX not in request.path) or not settings.DEBUG:
             return False
         return True
 
@@ -68,9 +69,7 @@ class DebugToolbarMiddleware(object):
         if self.show_toolbar(request):
             if self.override_url:
                 original_urlconf = getattr(request, 'urlconf', settings.ROOT_URLCONF)
-                debug_toolbar.urls.urlpatterns += patterns('',
-                    ('', include(original_urlconf)),
-                )
+                debug_toolbar.urls.urlpatterns += patterns('', ('', include(original_urlconf)), )
                 self.override_url = False
             request.urlconf = 'debug_toolbar.urls'
 
@@ -101,7 +100,7 @@ class DebugToolbarMiddleware(object):
                 panel.process_response(request, response)
             if response['Content-Type'].split(';')[0] in _HTML_TYPES:
                 response.content = replace_insensitive(
-                    smart_unicode(response.content), 
+                    smart_unicode(response.content),
                     self.tag,
                     smart_unicode(self.debug_toolbars[request].render_toolbar() + self.tag))
             if response.get('Content-Length', None):

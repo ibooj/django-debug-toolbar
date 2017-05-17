@@ -16,6 +16,7 @@ except ImportError:
 
 from debug_toolbar.panels import DebugPanel
 
+
 class SignalDebugPanel(DebugPanel):
     name = "Signals"
     has_content = True
@@ -76,8 +77,10 @@ class SignalDebugPanel(DebugPanel):
                     text = "method %s on %s object" % (receiver.__name__, receiver.im_self.__class__.__name__)
                 elif getattr(receiver, 'im_class', None) is not None:
                     text = "method %s on %s" % (receiver.__name__, receiver.im_class.__name__)
-                else:
+                elif hasattr(receiver, '__name__'):
                     text = "function %s" % receiver.__name__
+                else:
+                    text = "function %s" % receiver.__class__.__name__
                 receivers.append(text)
             signals.append((name, signal, receivers))
 

@@ -13,7 +13,6 @@ from django.template import Node
 from django.template.loader import render_to_string
 from django.utils import simplejson
 from django.utils.encoding import force_unicode
-from django.utils.hashcompat import sha_constructor
 from django.utils.translation import ugettext_lazy as _
 
 from debug_toolbar.panels import DebugPanel
@@ -27,6 +26,11 @@ socketserver_path = os.path.realpath(os.path.dirname(SocketServer.__file__))
 # get a copy of the toolbar object with access to its config dictionary
 SQL_WARNING_THRESHOLD = getattr(settings, 'DEBUG_TOOLBAR_CONFIG', {}) \
                             .get('SQL_WARNING_THRESHOLD', 500)
+
+try:
+    from hashlib import sha1 as sha_constructor
+except ImportError:
+    from django.utils.hashcompat import sha_constructor
 
 def tidy_stacktrace(strace):
     """

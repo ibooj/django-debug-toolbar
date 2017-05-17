@@ -4,6 +4,7 @@ The main DebugToolbar class that loads and renders the Toolbar.
 from django.conf import settings
 from django.template.loader import render_to_string
 
+
 class DebugToolbar(object):
 
     def __init__(self, request):
@@ -73,6 +74,6 @@ class DebugToolbar(object):
         Renders the overall Toolbar with panels inside.
         """
         context = self.template_context.copy()
-        context.update({ 'panels': self.panels, })
+        context.update({'panels': self.panels, })
 
         return render_to_string('debug_toolbar/base.html', context)
